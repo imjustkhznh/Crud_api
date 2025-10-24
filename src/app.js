@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
 });
 
 // centralized error handler
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   // eslint-disable-next-line no-console
   console.error('Express error handler:', err && err.stack ? err.stack : err);
   res.status(err && err.status ? err.status : 500).json({

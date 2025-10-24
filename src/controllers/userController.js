@@ -6,13 +6,8 @@ export const getUsers = async (req, res) => {
     res.json(users);
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error('getUsers error:', err && err.stack ? err.stack : err);
-    if (err && err.code === 'ER_ACCESS_DENIED_ERROR') {
-      return res.status(500).json({
-        error: 'Database access denied. Check DB_USER and DB_PASSWORD in your .env (or DB credentials).'
-      });
-    }
-    res.status(500).json({ error: err && err.message ? err.message : 'Internal Server Error' });
+    console.error('getUsers error:', err);
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 };
 
@@ -23,13 +18,8 @@ export const getUser = async (req, res) => {
     res.json(user);
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error('getUserById error:', err && err.stack ? err.stack : err);
-    if (err && err.code === 'ER_ACCESS_DENIED_ERROR') {
-      return res.status(500).json({
-        error: 'Database access denied. Check DB_USER and DB_PASSWORD in your .env (or DB credentials).'
-      });
-    }
-    res.status(500).json({ error: err && err.message ? err.message : 'Internal Server Error' });
+    console.error('getUserById error:', err);
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 };
 
@@ -39,16 +29,11 @@ export const createUser = async (req, res) => {
     res.status(201).json(newUser);
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error('createUser error:', err && err.stack ? err.stack : err);
-    if (err && err.code === 'ER_ACCESS_DENIED_ERROR') {
-      return res.status(500).json({
-        error: 'Database access denied. Check DB_USER and DB_PASSWORD in your .env (or DB credentials).'
-      });
-    }
-    if (err && err.code === 'ER_DUP_ENTRY') {
+    console.error('createUser error:', err);
+    if (err.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ error: 'Email already exists' });
     }
-    res.status(500).json({ error: err && err.message ? err.message : 'Internal Server Error' });
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 };
 
@@ -58,16 +43,11 @@ export const updateUser = async (req, res) => {
     res.json(updated);
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error('updateUser error:', err && err.stack ? err.stack : err);
-    if (err && err.code === 'ER_ACCESS_DENIED_ERROR') {
-      return res.status(500).json({
-        error: 'Database access denied. Check DB_USER and DB_PASSWORD in your .env (or DB credentials).'
-      });
-    }
-    if (err && err.code === 'ER_DUP_ENTRY') {
+    console.error('updateUser error:', err);
+    if (err.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ error: 'Email already exists' });
     }
-    res.status(500).json({ error: err && err.message ? err.message : 'Internal Server Error' });
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 };
 
@@ -77,12 +57,7 @@ export const deleteUser = async (req, res) => {
     res.json(deleted);
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error('deleteUser error:', err && err.stack ? err.stack : err);
-    if (err && err.code === 'ER_ACCESS_DENIED_ERROR') {
-      return res.status(500).json({
-        error: 'Database access denied. Check DB_USER and DB_PASSWORD in your .env (or DB credentials).'
-      });
-    }
-    res.status(500).json({ error: err && err.message ? err.message : 'Internal Server Error' });
+    console.error('deleteUser error:', err);
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 };
