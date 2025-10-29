@@ -66,7 +66,7 @@ Base URL: `http://localhost:3000`
 
 ## Testing with Thunder Client
 
-1. Install Thunder Client extension in VS Code/Cursor
+1. Install Thunder Client extension in VS Code
 2. Click Thunder Client icon in sidebar
 3. Create new request
 4. Select method and enter URL
