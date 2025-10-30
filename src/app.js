@@ -5,17 +5,14 @@ import userRoutes from "./routes/userRoutes.js";
 const app = express();
 app.use(express.json());
 
-// simple request logger to help debug "Cannot GET /users"
 app.use((req, res, next) => {
   // eslint-disable-next-line no-console
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
   next();
 });
 
-// mount router on /users so http://localhost:3000/users works
 app.use("/users", userRoutes);
 
-// health / debug route (do not expose password)
 app.get("/", (req, res) => {
   res.json({
     message: "Server is running",
