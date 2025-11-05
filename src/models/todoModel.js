@@ -15,17 +15,6 @@ const mapRow = r => ({
   updatedAt: r.updated_at
 });
 
-function toMySQLDatetime(date) {
-  if (!date) return null;
-  // Chuyển ISO format → MySQL format (YYYY-MM-DD HH:MM:SS)
-  return new Date(date).toISOString().slice(0, 19).replace('T', ' ');
-}
-
-export async function getAllTodos() {
-  const [rows] = await pool.query("SELECT * FROM todos WHERE is_deleted = 0");
-  return rows;
-}
-
 export const createTodo = async ({ userId = null, content, dueAt, remindAt = null }) => {
   const [res] = await pool.query(
     `INSERT INTO todos (user_id, content, due_at, remind_at) VALUES (?, ?, ?, ?)`,
@@ -72,8 +61,10 @@ export const softDeleteTodo = async (id) => {
 export const findDueUnnotifiedTodos = async () => {
   const [rows] = await pool.query(
     `SELECT * FROM todos
-     WHERE is_deleted=0 AND is_done=0 AND is_notified=0
-       AND (due_at <= NOW() OR (remind_at IS NOT NULL AND remind_at <= NOW()))`
+     WHERE is_deleted=0 AND is_done=0 AND (
+       (due_at <= NOW() AND is_notified=0)
+       OR (remind_at IS NOT NULL AND remind_at <= NOW() AND notification_count=0)
+     )`
   );
   return rows.map(mapRow);
 };
@@ -83,6 +74,16 @@ export const markTodosNotified = async (ids) => {
   await pool.query(
     `UPDATE todos
        SET is_notified=1, notified_at=NOW(), notification_count=notification_count+1
+     WHERE id IN (${ids.map(() => '?').join(',')})`,
+    ids
+  );
+};
+
+export const markTodosReminded = async (ids) => {
+  if (!ids?.length) return;
+  await pool.query(
+    `UPDATE todos
+       SET notification_count = notification_count + 1
      WHERE id IN (${ids.map(() => '?').join(',')})`,
     ids
   );
