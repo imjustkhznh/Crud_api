@@ -98,6 +98,3 @@ Example POST request:
 | 404 | Not Found |
 | 500 | Internal Server Error |
 
-## License
-
-MIT

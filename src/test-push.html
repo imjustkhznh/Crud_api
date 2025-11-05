@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Push Notifications</title>
+</head>
+<body>
+  <h1>🔔 Test Push Notification</h1>
+  <button id="subscribe">Đăng ký nhận thông báo</button>
+
+  <script>
+    async function registerPush() {
+      if (!('serviceWorker' in navigator)) {
+        alert('Trình duyệt của bạn không hỗ trợ Service Worker.');
+        return;
+      }
+
+      // Lấy public VAPID key từ server
+      const res = await fetch('http://localhost:3000/push/public-key');
+      const data = await res.json();
+      const publicKey = data.publicKey;
+
+      // Đăng ký service worker
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('✅ Service worker registered:', registration);
+
+      // Đăng ký push subscription
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey)
+      });
+
+      // Gửi subscription lên server để lưu lại
+      await fetch('http://localhost:3000/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription)
+      });
+
+      alert('✅ Đăng ký nhận thông báo thành công!');
+    }
+
+    // Hàm convert base64 → Uint8Array
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    document.getElementById('subscribe').addEventListener('click', registerPush);
+  </script>
+</body>
+</html>
