@@ -14,14 +14,13 @@ export const runNotificationOnce = async () => {
     const isDue = todo.dueAt && new Date(todo.dueAt).getTime() <= now && !todo.isNotified;
     const isRemind = todo.remindAt && new Date(todo.remindAt).getTime() <= now && todo.notificationCount === 0 && !todo.isNotified;
 
-    // 🟡 Reminder
+    // Reminder
     if (isRemind) {
       // eslint-disable-next-line no-console
       console.log(`[JOB] Reminder -> todoId=${todo.id} content="${todo.content}" remindAt=${todo.remindAt}`);
       const payload = {
         title: '💡 Reminder!',
         body: `Your task "${todo.content}" is due soon.`,
-        icon: '/reminder.png', // có thể là icon trong public/
         data: { todoId: todo.id }
       };
       await sendPushNotification(payload);
@@ -29,14 +28,13 @@ export const runNotificationOnce = async () => {
       continue;
     }
 
-    // 🔴 Deadline
+    // Deadline
     if (isDue) {
       // eslint-disable-next-line no-console
       console.log(`[JOB] Deadline -> todoId=${todo.id} content="${todo.content}" dueAt=${todo.dueAt}`);
       const payload = {
         title: '🔥 Deadline!',
         body: `Your task "${todo.content}" is due NOW!`,
-        icon: '/deadline.png', // có thể là icon riêng khi đến hạn
         data: { todoId: todo.id }
       };
       await sendPushNotification(payload);

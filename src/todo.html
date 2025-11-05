@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo List</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 20px auto; }
+    h1 { text-align: center; }
+    form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    form label { display: flex; align-items: center; gap: 12px; }
+    form label span { width: 140px; color: #333; }
+    form label input { flex: 1; }
+    input, button { padding: 8px; font-size: 1em; }
+    ul { list-style: none; padding: 0; }
+    li { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #ccc; }
+    .done { text-decoration: line-through; color: gray; }
+  </style>
+</head>
+<body>
+  <h1>📝 Todo List</h1>
+
+  <form id="todoForm">
+    <label>
+      <span>Content</span>
+      <input id="content" placeholder="e.g., Drink water" required />
+    </label>
+    <label>
+      <span>Reminder time</span>
+      <input id="remindAt" type="datetime-local" required />
+    </label>
+    <label>
+      <span>Due time</span>
+      <input id="dueAt" type="datetime-local" required />
+    </label>
+    <button type="submit">Add Task</button>
+  </form>
+
+  <ul id="todoList"></ul>
+
+  <script>
+    const API = "http://localhost:3000/todos";
+
+    async function loadTodos() {
+      const res = await fetch(API);
+      const todos = await res.json();
+      const list = document.getElementById("todoList");
+      list.innerHTML = "";
+
+      todos.forEach(todo => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <div>
+            <input type="checkbox" ${todo.isDone ? "checked" : ""} onchange="toggleDone(${todo.id}, this.checked)">
+            <span class="${todo.isDone ? "done" : ""}">${todo.content}</span><br>
+            <small>
+              Reminder: <strong>${new Date(todo.remindAt).toLocaleString()}</strong><br>
+              Due: <strong>${new Date(todo.dueAt).toLocaleString()}</strong><br>
+              Status: ${todo.isDone ? "Done" : "Not done"} · Notified: ${todo.isNotified ? "Yes" : "No"} · Sends: ${todo.notificationCount}
+            </small>
+          </div>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    async function toggleDone(id, done) {
+      await fetch(`${API}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isDone: done })
+      });
+      loadTodos();
+    }
+
+    document.getElementById("todoForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const content = document.getElementById("content").value;
+      const remindAt = document.getElementById("remindAt").value.replace("T", " ");
+      const dueAt = document.getElementById("dueAt").value.replace("T", " ");
+
+      await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content, remindAt, dueAt })
+      });
+
+      e.target.reset();
+      loadTodos();
+    });
+
+    loadTodos();
+  </script>
+</body>
+</html>

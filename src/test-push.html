@@ -6,56 +6,37 @@
   <title>Test Push Notifications</title>
 </head>
 <body>
-  <h1>🔔 Test Push Notification</h1>
-  <button id="subscribe">Đăng ký nhận thông báo</button>
+  <ul id="todoList"></ul>
 
-  <script>
-    async function registerPush() {
-      if (!('serviceWorker' in navigator)) {
-        alert('Trình duyệt của bạn không hỗ trợ Service Worker.');
-        return;
-      }
+<script>
+async function loadTodos() {
+  const res = await fetch('http://localhost:3000/todos');
+  const todos = await res.json();
 
-      // Lấy public VAPID key từ server
-      const res = await fetch('http://localhost:3000/push/public-key');
-      const data = await res.json();
-      const publicKey = data.publicKey;
+  const list = document.getElementById('todoList');
+  list.innerHTML = '';
 
-      // Đăng ký service worker
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('✅ Service worker registered:', registration);
+  todos.forEach(todo => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <input type="checkbox" ${todo.isDone ? 'checked' : ''} onchange="toggleDone(${todo.id}, this.checked)">
+      ${todo.content} (due: ${new Date(todo.dueAt).toLocaleTimeString()})
+    `;
+    list.appendChild(li);
+  });
+}
 
-      // Đăng ký push subscription
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
-      });
+async function toggleDone(id, done) {
+  await fetch(`http://localhost:3000/todos/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ isDone: done })
+  });
+  loadTodos();
+}
 
-      // Gửi subscription lên server để lưu lại
-      await fetch('http://localhost:3000/push/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(subscription)
-      });
+loadTodos();
+</script>
 
-      alert('✅ Đăng ký nhận thông báo thành công!');
-    }
-
-    // Hàm convert base64 → Uint8Array
-    function urlBase64ToUint8Array(base64String) {
-      const padding = '='.repeat((4 - base64String.length % 4) % 4);
-      const base64 = (base64String + padding)
-        .replace(/-/g, '+')
-        .replace(/_/g, '/');
-      const rawData = window.atob(base64);
-      const outputArray = new Uint8Array(rawData.length);
-      for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-      }
-      return outputArray;
-    }
-
-    document.getElementById('subscribe').addEventListener('click', registerPush);
-  </script>
 </body>
 </html>

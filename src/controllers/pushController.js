@@ -1,4 +1,4 @@
-import webpush from "web-push";
+// src/controllers/pushController.js
 import { upsertSubscription } from '../models/subscriptionModel.js';
 import { getVapidPublicKey } from '../config/push.js';
 
@@ -12,4 +12,3 @@ export const subscribe = async (req, res) => {
   await upsertSubscription(sub);
   res.status(201).json({ success: true });
 };
-

@@ -14,6 +14,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(__dirname));
 
+app.use(express.static(path.join(__dirname)));
+
 app.use((req, res, next) => {
   // eslint-disable-next-line no-console
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
@@ -46,5 +48,6 @@ app.use((err, req, res, next) => {
     error: err && err.message ? err.message : 'Internal Server Error'
   });
 });
+
 
 export default app;
