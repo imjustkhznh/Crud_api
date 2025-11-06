@@ -15,6 +15,27 @@
     ul { list-style: none; padding: 0; }
     li { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #ccc; }
     .done { text-decoration: line-through; color: gray; }
+    .actions { display: flex; gap: 8px; align-items: center; }
+    /* Neutral inline Subscribe button */
+    .actions-bar { display: flex; gap: 10px; }
+    .actions-bar button { flex: 1; }
+    /* Neutral buttons */
+    .btn-danger {
+      appearance: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #f5f5f5;
+      color: #333;
+      border: 1px solid #ccc;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      transition: transform 0.06s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+    }
+    .btn-danger:hover { background: #eeeeee; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .btn-danger:active { transform: translateY(1px); }
+    .btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+    #subStatus { margin: 6px 0 0 0; color: #333; font-size: 0.9em; }
   </style>
 </head>
 <body>
@@ -33,63 +54,35 @@
       <span>Due time</span>
       <input id="dueAt" type="datetime-local" required />
     </label>
-    <button type="submit">Add Task</button>
+    <div class="actions-bar">
+      <button class="btn-danger" type="submit">Add Task</button>
+      <span id="subStatus"></span>
+    </div>
   </form>
 
   <ul id="todoList"></ul>
 
-  <script>
-    const API = "http://localhost:3000/todos";
+  <script src="/todo.js"></script>
 
-    async function loadTodos() {
-      const res = await fetch(API);
-      const todos = await res.json();
-      const list = document.getElementById("todoList");
-      list.innerHTML = "";
-
-      todos.forEach(todo => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <div>
-            <input type="checkbox" ${todo.isDone ? "checked" : ""} onchange="toggleDone(${todo.id}, this.checked)">
-            <span class="${todo.isDone ? "done" : ""}">${todo.content}</span><br>
-            <small>
-              Reminder: <strong>${new Date(todo.remindAt).toLocaleString()}</strong><br>
-              Due: <strong>${new Date(todo.dueAt).toLocaleString()}</strong><br>
-              Status: ${todo.isDone ? "Done" : "Not done"} · Notified: ${todo.isNotified ? "Yes" : "No"} · Sends: ${todo.notificationCount}
-            </small>
-          </div>
-        `;
-        list.appendChild(li);
-      });
-    }
-
-    async function toggleDone(id, done) {
-      await fetch(`${API}/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isDone: done })
-      });
-      loadTodos();
-    }
-
-    document.getElementById("todoForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const content = document.getElementById("content").value;
-      const remindAt = document.getElementById("remindAt").value.replace("T", " ");
-      const dueAt = document.getElementById("dueAt").value.replace("T", " ");
-
-      await fetch(API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, remindAt, dueAt })
-      });
-
-      e.target.reset();
-      loadTodos();
-    });
-
-    loadTodos();
-  </script>
+  <!-- Simple Reschedule Modal -->
+  <div id="resModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);">
+    <div style="background:#fff; max-width: 420px; margin: 10% auto; padding: 16px; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,0.18);">
+      <h3 style="margin-top:0">Reschedule Task</h3>
+      <div style="display:flex; flex-direction: column; gap: 10px;">
+        <label style="display:flex; align-items:center; gap:12px;">
+          <span style="width:140px; color:#333;">Reminder time</span>
+          <input id="resRemindAt" type="datetime-local" />
+        </label>
+        <label style="display:flex; align-items:center; gap:12px;">
+          <span style="width:140px; color:#333;">Due time</span>
+          <input id="resDueAt" type="datetime-local" />
+        </label>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button id="resSave" class="btn-danger" style="flex:1;">Save</button>
+        <button id="resCancel" class="btn-danger" style="flex:1;">Cancel</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
