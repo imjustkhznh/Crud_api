@@ -1,100 +1,82 @@
-# CRUD API - User Management
+# Todo List with Web Push Notifications
 
-RESTful API for user management with Node.js, Express, and MySQL.
+Task management with push notifications for reminders and deadlines.
 
-## Tech Stack
+## Requirements
 
-- Node.js v22+
-- Express.js
-- MySQL (mysql2)
-- ESLint, Prettier, Nodemon
+- Node.js >= 16
+- MySQL >= 5.7
 
 ## Installation
 
-1. Clone repo:
-```bash
-git clone https://github.com/imjustkhznh/Crud_api.git
-cd Crud_api
-```
+1. Install dependencies: `npm install`
 
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Setup MySQL database:
+2. Create database:
 ```sql
-CREATE DATABASE api_crud_db;
-USE api_crud_db;
-CREATE TABLE users (
+CREATE DATABASE todo_db;
+USE todo_db;
+
+CREATE TABLE IF NOT EXISTS push_subscriptions (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  endpoint TEXT NOT NULL,
+  p256dh VARCHAR(255) NOT NULL,
+  auth VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_endpoint (endpoint(255))
+);
+
+CREATE TABLE IF NOT EXISTS todos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NULL,
+  content VARCHAR(255) NOT NULL,
+  due_at DATETIME NOT NULL,
+  remind_at DATETIME NULL,
+  is_done TINYINT(1) DEFAULT 0,
+  is_notified TINYINT(1) DEFAULT 0,
+  notified_at DATETIME NULL,
+  notification_count INT DEFAULT 0,
+  is_remind_notified BOOLEAN DEFAULT 0,
+  is_deleted TINYINT(1) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_user_id (user_id),
+  INDEX idx_due (is_done, is_notified, due_at),
+  INDEX idx_remind (is_done, is_notified, remind_at),
+  INDEX idx_is_deleted (is_deleted)
 );
 ```
 
-4. Create `.env` file:
+3. Generate VAPID keys: `npx web-push generate-vapid-keys`
+
+4. Create `.env`:
 ```env
+PORT=3000
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_password
-DB_NAME=api_crud_db
-DB_PORT=3306
-PORT=3000
+DB_NAME=todo_db
+VAPID_SUBJECT=mailto:you@example.com
+VAPID_PUBLIC_KEY=your_public_key
+VAPID_PRIVATE_KEY=your_private_key
 ```
 
-5. Run server:
-```bash
-npm run dev    # development
-npm start      # production
-```
+5. Run: `npm run dev`
 
-Server runs at `http://localhost:3000`
+Access: `http://localhost:3000/todo.html`
 
-## API Endpoints
+## API
 
-Base URL: `http://localhost:3000`
+- GET `/todos` - List todos
+- POST `/todos` - Create: `{ content, remindAt, dueAt }`
+- PUT `/todos/:id` - Update: `{ content?, remindAt?, dueAt?, isDone? }`
+- DELETE `/todos/:id` - Delete
+- GET `/push/public-key` - Get VAPID key
+- POST `/push/subscribe` - Subscribe
 
-| Method | Endpoint | Description | Body |
-|--------|----------|-------------|------|
-| GET | `/users` | Get all users | - |
-| GET | `/users/:id` | Get user by ID | - |
-| POST | `/users` | Create user | `{"name": "...", "email": "..."}` |
-| PUT | `/users/:id` | Update user | `{"name": "...", "email": "..."}` |
-| DELETE | `/users/:id` | Delete user | - |
+## Notes
 
-## Testing with Thunder Client
-
-1. Install Thunder Client extension in VS Code/Cursor
-2. Click Thunder Client icon in sidebar
-3. Create new request
-4. Select method and enter URL
-5. For POST/PUT: go to Body tab → select JSON → enter data
-6. Click Send
-
-Example POST request:
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com"
-}
-```
-
-## Scripts
-
-- `npm start` - Production mode
-- `npm run dev` - Development mode (nodemon)
-- `npm run lint` - Run ESLint
-- `npm run format` - Format with Prettier
-
-## Error Codes
-
-| Code | Description |
-|------|-------------|
-| 200 | OK |
-| 201 | Created |
-| 400 | Bad Request (e.g., duplicate email) |
-| 404 | Not Found |
-| 500 | Internal Server Error |
-
+- Notification job runs every 10 seconds
+- Only incomplete tasks receive notifications
+- Requires HTTPS in production
+- Must access via `http://localhost:3000` for Service Worker
