@@ -47,7 +47,6 @@ async function loadTodos() {
           <small>
             Reminder: <strong>${formatDateTime(todo.remindAt)}</strong><br>
             Due: <strong>${formatDateTime(todo.dueAt)}</strong><br>
-            Status: ${todo.isDone ? "Done" : "Not done"} · Notified: ${todo.isNotified ? "Yes" : "No"} · Sends: ${todo.notificationCount}
           </small>
         </div>
         <div class="actions">

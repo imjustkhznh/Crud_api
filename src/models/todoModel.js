@@ -45,14 +45,17 @@ export const updateTodo = async (id, { content, dueAt, remindAt, isDone }) => {
        SET content = COALESCE(?, content),
            due_at = COALESCE(?, due_at),
            remind_at = COALESCE(?, remind_at),
-           is_done = COALESCE(?, is_done)
+           is_done = COALESCE(?, is_done),
+           is_notified = 0,
+           notified_at = NULL,
+           notification_count = 0 
      WHERE id=? AND is_deleted=0`,
     [content ?? null, dueAt ?? null, remindAt ?? null,
      typeof isDone === 'boolean' ? Number(isDone) : null, id]
   );
+
   return await findTodoById(id);
 };
-
 export const softDeleteTodo = async (id) => {
   await pool.query(`UPDATE todos SET is_deleted=1 WHERE id=?`, [id]);
   return { success: true };
