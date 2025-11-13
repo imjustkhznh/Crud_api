@@ -5,82 +5,258 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Todo List</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 20px auto; }
-    h1 { text-align: center; }
-    form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-    form label { display: flex; align-items: center; gap: 12px; }
-    form label span { width: 140px; color: #333; }
-    form label input { flex: 1; }
-    input, button { padding: 8px; font-size: 1em; }
-    ul { list-style: none; padding: 0; }
-    li { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #ccc; }
-    .done { text-decoration: line-through; color: gray; }
-    .actions { display: flex; gap: 8px; align-items: center; }
-    /* Neutral inline Subscribe button */
-    .actions-bar { display: flex; gap: 10px; }
-    .actions-bar button { flex: 1; }
-    /* Neutral buttons */
-    .btn-danger {
-      appearance: none;
-      padding: 10px 14px;
-      border-radius: 8px;
-      background: #f5f5f5;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #828282;
+      min-height: 100vh;
+      padding: 20px;
       color: #333;
-      border: 1px solid #ccc;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-      transition: transform 0.06s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
     }
-    .btn-danger:hover { background: #eeeeee; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
-    .btn-danger:active { transform: translateY(1px); }
-    .btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
-    #subStatus { margin: 6px 0 0 0; color: #333; font-size: 0.9em; }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 32px;
+    }
+    h1 { 
+      text-align: center;
+      font-size: 2em;
+      margin-bottom: 32px;
+      color: #2c3e50;
+      font-weight: 700;
+    }
+    form { 
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+    }
+    form label { 
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    form label span { 
+      font-weight: 600;
+      color: #555;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input {
+      padding: 12px 16px;
+      font-size: 1em;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+    input:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 1em;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    ul { list-style: none; }
+    li { 
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      margin-bottom: 12px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      border-left: 4px solid #3498db;
+    }
+    li:hover {
+      transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .todo-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .todo-title {
+      font-weight: 600;
+      font-size: 1.05em;
+      color: #333;
+    }
+    .todo-time {
+      font-size: 0.85em;
+      color: #888;
+    }
+    .done .todo-title { 
+      text-decoration: line-through;
+      color: #aaa;
+    }
+    .done {
+      opacity: 0.6;
+      border-left-color: #ccc;
+    }
+    .actions { 
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .actions button {
+      padding: 8px 16px;
+      font-size: 0.85em;
+      background: white;
+      color: #ff0000;
+      border: 2px solid #ff0000;
+      box-shadow: none;
+    }
+    .actions button:hover {
+      background: #ff0000;
+      color: white;
+      transform: translateY(-1px);
+    }
+    .actions button.delete {
+      color: #dc3545;
+      border-color: #dc3545;
+    }
+    .actions button.delete:hover {
+      background: #dc3545;
+      color: white;
+    }
+    .actions-bar { 
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .actions-bar button { flex: 1; }
+    #subStatus { 
+      font-size: 0.9em;
+      color: #666;
+      font-weight: 500;
+    }
+    /* Modal */
+    #resModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+    }
+    #resModal > div {
+      background: #fff;
+      max-width: 500px;
+      margin: 10% auto;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    #resModal h3 {
+      margin-bottom: 24px;
+      color: #2c3e50;
+      font-size: 1.5em;
+    }
+    #resModal .modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    #resModal label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #resModal label span {
+      font-weight: 600;
+      color: #555;
+      font-size: 0.9em;
+      text-transform: uppercase;
+    }
+    #resModal .modal-actions {
+      display: flex;
+      gap: 12px;
+    }
+    #resModal .modal-actions button {
+      flex: 1;
+    }
+    @media (max-width: 640px) {
+      .container { padding: 20px; }
+      h1 { font-size: 1.5em; }
+      li { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .actions { width: 100%; justify-content: flex-end; }
+    }
   </style>
 </head>
 <body>
-  <h1>Todo List</h1>
+  <div class="container">
+    <h1>📝 Todo List</h1>
 
-  <form id="todoForm">
-    <label>
-      <span>Content</span>
-      <input id="content" placeholder="e.g., Drink water" required />
-    </label>
-    <label>
-      <span>Reminder time</span>
-      <input id="remindAt" type="datetime-local" required />
-    </label>
-    <label>
-      <span>Due time</span>
-      <input id="dueAt" type="datetime-local" required />
-    </label>
-    <div class="actions-bar">
-      <button class="btn-danger" type="submit">Add Task</button>
-      <span id="subStatus"></span>
-    </div>
-  </form>
+    <form id="todoForm">
+      <label>
+        <span>📋 Content</span>
+        <input id="content" placeholder="What do you need to do?" required />
+      </label>
+      <label>
+        <span>⏰ Reminder time</span>
+        <input id="remindAt" type="datetime-local" required />
+      </label>
+      <label>
+        <span>📅 Due time</span>
+        <input id="dueAt" type="datetime-local" required />
+      </label>
+      <div class="actions-bar">
+        <button class="btn-primary" type="submit">Add Task</button>
+        <span id="subStatus"></span>
+      </div>
+    </form>
 
-  <ul id="todoList"></ul>
+    <ul id="todoList"></ul>
+  </div>
 
   <script src="/todo.js"></script>
 
-  <!-- Simple Reschedule Modal -->
-  <div id="resModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);">
-    <div style="background:#fff; max-width: 420px; margin: 10% auto; padding: 16px; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,0.18);">
-      <h3 style="margin-top:0">Reschedule Task</h3>
-      <div style="display:flex; flex-direction: column; gap: 10px;">
-        <label style="display:flex; align-items:center; gap:12px;">
-          <span style="width:140px; color:#333;">Reminder time</span>
+  <div id="resModal">
+    <div>
+      <h3>🔄 Reschedule Task</h3>
+      <div class="modal-form">
+        <label>
+          <span>⏰ Reminder time</span>
           <input id="resRemindAt" type="datetime-local" />
         </label>
-        <label style="display:flex; align-items:center; gap:12px;">
-          <span style="width:140px; color:#333;">Due time</span>
+        <label>
+          <span>📅 Due time</span>
           <input id="resDueAt" type="datetime-local" />
         </label>
       </div>
-      <div style="display:flex; gap:10px; margin-top:16px;">
-        <button id="resSave" class="btn-danger" style="flex:1;">Save</button>
-        <button id="resCancel" class="btn-danger" style="flex:1;">Cancel</button>
+      <div class="modal-actions">
+        <button id="resSave" class="btn-primary">Save</button>
+        <button id="resCancel" class="actions button">Cancel</button>
       </div>
     </div>
   </div>
