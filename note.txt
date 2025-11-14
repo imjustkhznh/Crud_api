@@ -1,0 +1,10 @@
+Thông báo trạng thái (success/error khi thêm/sửa/xóa)
+Bộ lọc (lọc theo trạng thái: tất cả, đã hoàn thành, chưa hoàn thành)
+Tìm kiếm (search theo nội dung)
+Chỉnh sửa nội dung task (hiện tại chỉ sửa thời gian)
+Đánh dấu hoàn thành (checkbox hoặc nút)
+Phân loại/categorize (tag, màu sắc, ưu tiên)
+Responsive tốt hơn (hiển thị đẹp trên mobile)
+Xác nhận khi xóa (popup xác nhận)
+Hiển thị số lượng task (đếm số việc)
+Dark mode (chuyển giao diện tối/sáng

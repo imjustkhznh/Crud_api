@@ -6,6 +6,7 @@ const mapRow = r => ({
   content: r.content,
   dueAt: r.due_at,
   remindAt: r.remind_at,
+  tag: r.tag,
   isDone: Boolean(r.is_done),
   isNotified: Boolean(r.is_notified),
   notifiedAt: r.notified_at,
@@ -15,10 +16,10 @@ const mapRow = r => ({
   updatedAt: r.updated_at
 });
 
-export const createTodo = async ({ userId = null, content, dueAt, remindAt = null }) => {
+export const createTodo = async ({ userId = null, content, dueAt, remindAt = null, tag = 'work' }) => {
   const [res] = await pool.query(
-    `INSERT INTO todos (user_id, content, due_at, remind_at) VALUES (?, ?, ?, ?)`,
-    [userId, content, dueAt, remindAt]
+    `INSERT INTO todos (user_id, content, due_at, remind_at, tag) VALUES (?, ?, ?, ?, ?)`,
+    [userId, content, dueAt, remindAt, tag]
   );
   const [rows] = await pool.query(`SELECT * FROM todos WHERE id=?`, [res.insertId]);
   return mapRow(rows[0]);
@@ -39,19 +40,20 @@ export const findTodoById = async (id) => {
   return rows[0] ? mapRow(rows[0]) : null;
 };
 
-export const updateTodo = async (id, { content, dueAt, remindAt, isDone }) => {
+export const updateTodo = async (id, { content, dueAt, remindAt, isDone, tag }) => {
   await pool.query(
     `UPDATE todos
        SET content = COALESCE(?, content),
            due_at = COALESCE(?, due_at),
            remind_at = COALESCE(?, remind_at),
            is_done = COALESCE(?, is_done),
+           tag = COALESCE(?, tag),
            is_notified = 0,
            notified_at = NULL,
            notification_count = 0 
      WHERE id=? AND is_deleted=0`,
     [content ?? null, dueAt ?? null, remindAt ?? null,
-     typeof isDone === 'boolean' ? Number(isDone) : null, id]
+     typeof isDone === 'boolean' ? Number(isDone) : null, tag ?? null, id]
   );
 
   return await findTodoById(id);

@@ -14,7 +14,7 @@
       color: #333;
     }
     .container {
-      max-width: 680px;
+      max-width: 1000px;
       margin: 0 auto;
       background: #fff;
       border-radius: 16px;
@@ -37,10 +37,40 @@
       background: #f8f9fa;
       border-radius: 12px;
     }
-    form label { 
+    form label {
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+    #tag {
+      padding: 12px 16px;
+      font-size: 1em;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #e3f2fd 0%, #f8f9fa 100%);
+      color: #2c3e50;
+      font-family: inherit;
+      margin-top: 4px;
+      box-shadow: 0 2px 8px rgba(52,152,219,0.08);
+      transition: border-color 0.3s;
+    }
+    #tag:focus {
+      border-color: #3498db;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(52,152,219,0.15);
+    }
+    label[for="tag"], label span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    label span {
+      font-weight: 600;
+      color: #3498db;
+      font-size: 1em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
     }
     form label span { 
       font-weight: 600;
@@ -205,6 +235,27 @@
     #resModal .modal-actions button {
       flex: 1;
     }
+      .filter-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .filter-bar button {
+        flex: 1;
+        min-width: 0;
+        padding: 12px 0;
+        font-size: 1em;
+        font-weight: 600;
+        border-radius: 12px;
+        border: none;
+        background: #f4f4f4;
+        color: #222;
+        box-shadow: 0 2px 8px rgba(52,152,219,0.08);
+        transition: background 0.2s, color 0.2s;
+        text-align: center;
+      }
     @media (max-width: 640px) {
       .container { padding: 20px; }
       h1 { font-size: 1.5em; }
@@ -216,11 +267,27 @@
 <body>
   <div class="container">
     <h1>📝 Todo List</h1>
+    <span id="statusMsg" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:8px;font-weight:600;"></span>
+    <div class="filter-bar">
+      <button id="filterAll" class="btn-primary" type="button">Tất cả</button>
+      <button id="filterActive" type="button">Chưa hoàn thành</button>
+      <button id="filterDone" type="button">Đã hoàn thành</button>
+    </div>
+    
 
     <form id="todoForm">
       <label>
         <span>📋 Content</span>
         <input id="content" placeholder="What do you need to do?" required />
+      </label>
+      <label>
+        <span>🏷️ Tag</span>
+        <select id="tag" required>
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+          <option value="urgent">Urgent</option>
+          <option value="study">Study</option>
+        </select>
       </label>
       <label>
         <span>⏰ Reminder time</span>

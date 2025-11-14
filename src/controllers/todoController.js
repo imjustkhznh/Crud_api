@@ -2,9 +2,9 @@ import * as Todo from '../models/todoModel.js';
 
 export const createTodo = async (req, res) => {
   try {
-    const { userId, content, dueAt, remindAt } = req.body;
+    const { userId, content, dueAt, remindAt, tag } = req.body;
     if (!content || !dueAt) return res.status(400).json({ error: 'content,dueAt required' });
-    const todo = await Todo.createTodo({ userId, content, dueAt, remindAt });
+    const todo = await Todo.createTodo({ userId, content, dueAt, remindAt, tag });
     res.status(201).json(todo);
   } catch (e) {
     res.status(500).json({ error: e && e.message ? e.message : 'Failed to create todo' });
@@ -41,6 +41,7 @@ export const updateTodoById = async (req, res) => {
       return res.status(400).json({ error: 'Cannot edit content after due time' });
     }
 
+    // Only allow tag update if not expired, or allow always? Here, allow always
     const todo = await Todo.updateTodo(req.params.id, req.body);
     res.json(todo);
   } catch (e) {

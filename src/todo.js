@@ -1,3 +1,12 @@
+// Hiển thị thông báo trạng thái
+function showStatus(message, type = 'success') {
+  const statusMsg = document.getElementById('statusMsg');
+  statusMsg.textContent = message;
+  statusMsg.style.display = 'block';
+  statusMsg.style.background = type === 'success' ? '#d4edda' : '#f8d7da';
+  statusMsg.style.color = type === 'success' ? '#155724' : '#721c24';
+  setTimeout(() => { statusMsg.style.display = 'none'; }, 2000);
+}
 const TODOS_API_BASE = "http://localhost:3000/todos";
 
 function formatDateTime(value) {
@@ -23,25 +32,38 @@ async function fetchJson(url, options) {
   try { return await res.json(); } catch (_) { return null; }
 }
 
+let currentFilter = 'all'; // 'all', 'active', 'done'
+
+
 async function loadTodos() {
   const list = document.getElementById("todoList");
   list.innerHTML = "Loading...";
   try {
     const todos = await fetchJson(TODOS_API_BASE);
     list.innerHTML = "";
-    if (!todos || !todos.length) {
+    let filtered = todos || [];
+    if (currentFilter === 'active') filtered = filtered.filter(t => !t.isDone);
+    if (currentFilter === 'done') filtered = filtered.filter(t => t.isDone);
+    // ...existing code...
+    if (!filtered.length) {
       const empty = document.createElement("li");
       empty.textContent = "No tasks yet. Create one above.";
       list.appendChild(empty);
       return;
     }
     const now = Date.now();
-    for (const todo of todos) {
+    for (const todo of filtered) {
       const isExpired = new Date(todo.dueAt).getTime() <= now;
       const li = document.createElement("li");
+      // Badge màu theo tag
+      let tagColor = '#2196f3';
+      if (todo.tag === 'personal') tagColor = '#4caf50';
+      if (todo.tag === 'urgent') tagColor = '#f44336';
+      if (todo.tag === 'study') tagColor = '#ff9800';
       li.innerHTML = `
         <div>
           <input type="checkbox" ${todo.isDone ? "checked" : ""} data-id="${todo.id}" aria-label="Mark done">
+          <span class="tag-badge" style="background:${tagColor};color:#fff;padding:2px 8px;border-radius:12px;margin-right:8px;">${todo.tag || 'work'}</span>
           <span class="${todo.isDone ? "done" : ""}">${todo.content}</span>
           <br>
           <small>
@@ -162,6 +184,7 @@ function toInputValue(dateString) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    // ...existing code...
   const form = document.getElementById("todoForm");
   const resModal = document.getElementById("resModal");
   const resRemindAt = document.getElementById("resRemindAt");
@@ -174,6 +197,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const content = document.getElementById("content").value;
     const remindAt = document.getElementById("remindAt").value.replace("T", " ");
     const dueAt = document.getElementById("dueAt").value.replace("T", " ");
+    const tag = document.getElementById("tag").value;
+    const now = new Date();
+    if (remindAt && new Date(remindAt) < now) {
+      showStatus('Reminder time cannot be in the past!', 'error');
+      return;
+    }
+    if (dueAt && new Date(dueAt) < now) {
+      showStatus('Due time cannot be in the past!', 'error');
+      return;
+    }
     try {
       // Ensure subscription automatically when adding a task
       try {
@@ -187,12 +220,13 @@ document.addEventListener("DOMContentLoaded", () => {
       await fetchJson(TODOS_API_BASE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, remindAt, dueAt })
+        body: JSON.stringify({ content, remindAt, dueAt, tag })
       });
       form.reset();
       await loadTodos();
+      showStatus('Task added successfully!', 'success');
     } catch (e) {
-      alert(e.message || "Create failed");
+      showStatus(e.message || "Failed to add task!", 'error');
     }
   });
 
@@ -203,8 +237,9 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const id = target.getAttribute("data-id");
         await onToggleDone(id, target.checked);
+        showStatus('Cập nhật trạng thái thành công!', 'success');
       } catch (err) {
-        alert(err.message || "Update failed");
+        showStatus(err.message || "Cập nhật trạng thái thất bại!", 'error');
         await loadTodos();
       }
     }
@@ -220,6 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (action === "edit") {
         const encoded = btn.getAttribute("data-content") || "";
         await onEditContent(id, encoded);
+        showStatus('Sửa nội dung thành công!', 'success');
       } else if (action === "reschedule") {
         rescheduleTodoId = id;
         // Prefill datetime-local inputs
@@ -230,10 +266,11 @@ document.addEventListener("DOMContentLoaded", () => {
         resModal.style.display = "block";
       } else if (action === "delete") {
         await onDeleteTodo(id);
+        showStatus('Xóa thành công!', 'success');
       }
       await loadTodos();
     } catch (err) {
-      alert(err.message || "Action failed");
+      showStatus(err.message || "Thao tác thất bại!", 'error');
     }
   });
 
@@ -249,7 +286,16 @@ document.addEventListener("DOMContentLoaded", () => {
       if (resRemindAt.value) body.remindAt = resRemindAt.value.replace("T", " ");
       if (resDueAt.value) body.dueAt = resDueAt.value.replace("T", " ");
       if (!body.remindAt && !body.dueAt) {
-        alert("Please choose at least one time.");
+        showStatus("Vui lòng chọn ít nhất một thời gian.", 'error');
+        return;
+      }
+      const now = new Date();
+      if (body.remindAt && new Date(body.remindAt) < now) {
+        showStatus('Không được chọn thời gian nhắc ở quá khứ!', 'error');
+        return;
+      }
+      if (body.dueAt && new Date(body.dueAt) < now) {
+        showStatus('Không được chọn hạn ở quá khứ!', 'error');
         return;
       }
       await fetchJson(`${TODOS_API_BASE}/${rescheduleTodoId}`, {
@@ -260,13 +306,18 @@ document.addEventListener("DOMContentLoaded", () => {
       rescheduleTodoId = null;
       resModal.style.display = "none";
       await loadTodos();
+      showStatus('Đặt lại thời gian thành công!', 'success');
     } catch (e) {
-      alert(e.message || "Reschedule failed");
+      showStatus(e.message || "Đặt lại thời gian thất bại!", 'error');
     }
   });
 
   const subBtn = document.getElementById("subscribeBtn");
   if (subBtn) subBtn.addEventListener("click", ensureSubscribed);
+
+  document.getElementById("filterAll").onclick = () => { currentFilter = 'all'; loadTodos(); };
+  document.getElementById("filterActive").onclick = () => { currentFilter = 'active'; loadTodos(); };
+  document.getElementById("filterDone").onclick = () => { currentFilter = 'done'; loadTodos(); };
 
   loadTodos();
 });
