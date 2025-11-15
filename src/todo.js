@@ -1,3 +1,48 @@
+// Modal edit task chuyên nghiệp
+function showEditModal(currentValue) {
+  return new Promise(resolve => {
+    let modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.background = 'rgba(0,0,0,0.3)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '9999';
+    modal.innerHTML = `
+      <div style="background:#fff;padding:20px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);width:300px;height:220px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+        <h3 style='margin-bottom:16px;color:#3498db;font-size:1.2em;'>Edit Task Name</h3>
+        <input id='editTaskInput' type='text' value="${currentValue.replace(/"/g, '&quot;')}" style='width:96%;padding:10px 8px;font-size:1em;border-radius:10px;border:2px solid #e0e0e0;margin-bottom:16px;' />
+        <div style='display:flex;gap:16px;justify-content:center;'>
+          <button id='saveEditTask' style='background:#3498db;color:#fff;padding:10px 20px;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:1em;'>Save</button>
+          <button id='cancelEditTask' style='background:#eee;color:#333;padding:10px 20px;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:1em;'>Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    const input = modal.querySelector('#editTaskInput');
+    input.focus();
+    input.select();
+    modal.querySelector('#saveEditTask').onclick = () => {
+      const value = input.value;
+      document.body.removeChild(modal);
+      resolve(value);
+    };
+    modal.querySelector('#cancelEditTask').onclick = () => {
+      document.body.removeChild(modal);
+      resolve(null);
+    };
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        modal.querySelector('#saveEditTask').click();
+      }
+      if (e.key === 'Escape') {
+        modal.querySelector('#cancelEditTask').click();
+      }
+    });
+  });
+}
+
 // Hiển thị thông báo trạng thái
 function showStatus(message, type = 'success') {
   const statusMsg = document.getElementById('statusMsg');
@@ -33,6 +78,8 @@ async function fetchJson(url, options) {
 }
 
 let currentFilter = 'all'; // 'all', 'active', 'done'
+let currentPage = 1;
+const PAGE_SIZE = 5;
 
 
 async function loadTodos() {
@@ -44,17 +91,31 @@ async function loadTodos() {
     let filtered = todos || [];
     if (currentFilter === 'active') filtered = filtered.filter(t => !t.isDone);
     if (currentFilter === 'done') filtered = filtered.filter(t => t.isDone);
-    // ...existing code...
-    if (!filtered.length) {
+
+    // Phân trang
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    if (currentPage > totalPages) currentPage = totalPages || 1;
+    const startIdx = (currentPage - 1) * PAGE_SIZE;
+    const pageTodos = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
+    if (!pageTodos.length) {
       const empty = document.createElement("li");
       empty.textContent = "No tasks yet. Create one above.";
       list.appendChild(empty);
       return;
     }
     const now = Date.now();
-    for (const todo of filtered) {
-      const isExpired = new Date(todo.dueAt).getTime() <= now;
+    for (const todo of pageTodos) {
+      const now = Date.now();
+      const remindAt = new Date(todo.remindAt).getTime();
+      const dueAt = new Date(todo.dueAt).getTime();
+      let borderColor = '#4caf50'; // xanh lá: chưa thông báo
+      if (todo.isDone) borderColor = '#aaa'; // xám: đã hoàn thành
+      else if (now >= dueAt) borderColor = '#dc3545'; // đỏ: đã đến hạn
+      else if (now >= remindAt) borderColor = '#ff9800'; // cam: đã remind
+
       const li = document.createElement("li");
+      li.style.borderLeft = `8px solid ${borderColor}`;
       // Badge màu theo tag
       let tagColor = '#2196f3';
       if (todo.tag === 'personal') tagColor = '#4caf50';
@@ -72,13 +133,37 @@ async function loadTodos() {
           </small>
         </div>
         <div class="actions">
-          ${!isExpired ? `<button class="btn-danger" data-action="edit" data-id="${todo.id}" data-content="${encodeURIComponent(todo.content)}">Edit</button>` : ""}
-          ${!isExpired ? `<button class=\"btn-danger\" data-action=\"reschedule\" data-id=\"${todo.id}\" data-remind=\"${encodeURIComponent(todo.remindAt || '')}\" data-due=\"${encodeURIComponent(todo.dueAt || '')}\">Reschedule</button>` : ""}
-          ${isExpired ? `<button class="btn-danger" data-action="delete" data-id="${todo.id}">Delete</button>` : ""}
+          ${now < dueAt ? `<button class="btn-danger" data-action="edit" data-id="${todo.id}" data-content="${encodeURIComponent(todo.content)}">Edit</button>` : ""}
+          ${now < dueAt ? `<button class=\"btn-danger\" data-action=\"reschedule\" data-id=\"${todo.id}\" data-remind=\"${encodeURIComponent(todo.remindAt || '')}\" data-due=\"${encodeURIComponent(todo.dueAt || '')}\">Reschedule</button>` : ""}
+          ${now >= dueAt ? `<button class="btn-danger" data-action="delete" data-id="${todo.id}">Delete</button>` : ""}
         </div>
       `;
       list.appendChild(li);
     }
+
+    // Thêm nút chuyển trang
+    const pagination = document.createElement("div");
+    pagination.style.textAlign = "center";
+    pagination.style.margin = "16px 0";
+    pagination.innerHTML = `
+      <button ${currentPage === 1 ? "disabled" : ""} id="prevPage">Prev</button>
+      <span> Trang ${currentPage} / ${totalPages} </span>
+      <button ${currentPage === totalPages ? "disabled" : ""} id="nextPage">Next</button>
+    `;
+    list.appendChild(pagination);
+
+    document.getElementById("prevPage")?.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        loadTodos();
+      }
+    });
+    document.getElementById("nextPage")?.addEventListener("click", () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        loadTodos();
+      }
+    });
   } catch (e) {
     list.innerHTML = "";
     const err = document.createElement("li");
@@ -97,18 +182,97 @@ async function onToggleDone(id, checked) {
 
 async function onEditContent(id, encoded) {
   const current = decodeURIComponent(encoded || "");
-  const next = prompt("Edit content:", current);
+  const next = await showEditModal(current);
   if (next == null || next.trim() === "" || next === current) return;
   await fetchJson(`${TODOS_API_BASE}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ content: next })
   });
+// (end of function)
+
+// Modal edit task chuyên nghiệp
+function showEditModal(currentValue) {
+  return new Promise(resolve => {
+    let modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.background = 'rgba(0,0,0,0.3)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '9999';
+    modal.innerHTML = `
+      <div style="background:#fff;padding:20px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);width:300px;height:220px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+        <h3 style='margin-bottom:16px;color:#3498db;font-size:1.2em;'>Edit Task Name</h3>
+        <input id='editTaskInput' type='text' value="${currentValue.replace(/"/g, '&quot;')}" style='width:96%;padding:10px 8px;font-size:1em;border-radius:10px;border:2px solid #e0e0e0;margin-bottom:16px;' />
+        <div style='display:flex;gap:16px;justify-content:center;'>
+          <button id='saveEditTask' style='background:#3498db;color:#fff;padding:10px 20px;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:1em;'>Save</button>
+          <button id='cancelEditTask' style='background:#eee;color:#333;padding:10px 20px;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:1em;'>Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    const input = modal.querySelector('#editTaskInput');
+    input.focus();
+    input.select();
+    modal.querySelector('#saveEditTask').onclick = () => {
+      const value = input.value;
+      document.body.removeChild(modal);
+      resolve(value);
+    };
+    modal.querySelector('#cancelEditTask').onclick = () => {
+      document.body.removeChild(modal);
+      resolve(null);
+    };
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        modal.querySelector('#saveEditTask').click();
+      }
+      if (e.key === 'Escape') {
+        modal.querySelector('#cancelEditTask').click();
+      }
+    });
+  });
+}
 }
 
 async function onDeleteTodo(id) {
-  if (!confirm("Delete this overdue task?")) return;
+  // Custom confirm popup
+  const confirmed = await showDeleteConfirm();
+  if (!confirmed) return;
   await fetchJson(`${TODOS_API_BASE}/${id}`, { method: "DELETE" });
+// Hiển thị popup xác nhận xóa
+function showDeleteConfirm() {
+  return new Promise(resolve => {
+    // Tạo modal
+    let modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.background = 'rgba(0,0,0,0.3)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '9999';
+    modal.innerHTML = `
+      <div style="background:#fff;padding:32px 24px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:320px;text-align:center;">
+        <h3 style="margin-bottom:16px;color:#dc3545;font-size:1.2em;">Delete Confirmation</h3>
+        <p style="margin-bottom:24px;">Are you sure you want to delete this task?</p>
+        <button id="confirmDelete" style="background:#dc3545;color:#fff;padding:10px 24px;border:none;border-radius:8px;font-weight:600;margin-right:12px;cursor:pointer;">Delete</button>
+        <button id="cancelDelete" style="background:#eee;color:#333;padding:10px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Cancel</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#confirmDelete').onclick = () => {
+      document.body.removeChild(modal);
+      resolve(true);
+    };
+    modal.querySelector('#cancelDelete').onclick = () => {
+      document.body.removeChild(modal);
+      resolve(false);
+    };
+  });
+}
 }
 
 async function ensureSubscribed() {
@@ -237,9 +401,9 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const id = target.getAttribute("data-id");
         await onToggleDone(id, target.checked);
-        showStatus('Cập nhật trạng thái thành công!', 'success');
+        showStatus('Status updated successfully!', 'success');
       } catch (err) {
-        showStatus(err.message || "Cập nhật trạng thái thất bại!", 'error');
+        showStatus(err.message || "Status update failed!", 'error');
         await loadTodos();
       }
     }
@@ -254,8 +418,16 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       if (action === "edit") {
         const encoded = btn.getAttribute("data-content") || "";
-        await onEditContent(id, encoded);
-        showStatus('Sửa nội dung thành công!', 'success');
+        const current = decodeURIComponent(encoded || "");
+        const next = await showEditModal(current);
+        if (next != null && next.trim() !== "" && next !== current) {
+          await fetchJson(`${TODOS_API_BASE}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: next })
+          });
+          showStatus('Content updated successfully!', 'success');
+        }
       } else if (action === "reschedule") {
         rescheduleTodoId = id;
         // Prefill datetime-local inputs
@@ -266,11 +438,11 @@ document.addEventListener("DOMContentLoaded", () => {
         resModal.style.display = "block";
       } else if (action === "delete") {
         await onDeleteTodo(id);
-        showStatus('Xóa thành công!', 'success');
+        showStatus('Deleted successfully!', 'success');
       }
       await loadTodos();
     } catch (err) {
-      showStatus(err.message || "Thao tác thất bại!", 'error');
+      showStatus(err.message || "Action failed!", 'error');
     }
   });
 
@@ -286,16 +458,16 @@ document.addEventListener("DOMContentLoaded", () => {
       if (resRemindAt.value) body.remindAt = resRemindAt.value.replace("T", " ");
       if (resDueAt.value) body.dueAt = resDueAt.value.replace("T", " ");
       if (!body.remindAt && !body.dueAt) {
-        showStatus("Vui lòng chọn ít nhất một thời gian.", 'error');
+        showStatus("Please select at least one time.", 'error');
         return;
       }
       const now = new Date();
       if (body.remindAt && new Date(body.remindAt) < now) {
-        showStatus('Không được chọn thời gian nhắc ở quá khứ!', 'error');
+        showStatus('Reminder time cannot be in the past!', 'error');
         return;
       }
       if (body.dueAt && new Date(body.dueAt) < now) {
-        showStatus('Không được chọn hạn ở quá khứ!', 'error');
+        showStatus('Due time cannot be in the past!', 'error');
         return;
       }
       await fetchJson(`${TODOS_API_BASE}/${rescheduleTodoId}`, {
@@ -306,18 +478,30 @@ document.addEventListener("DOMContentLoaded", () => {
       rescheduleTodoId = null;
       resModal.style.display = "none";
       await loadTodos();
-      showStatus('Đặt lại thời gian thành công!', 'success');
+      showStatus('Rescheduled successfully!', 'success');
     } catch (e) {
-      showStatus(e.message || "Đặt lại thời gian thất bại!", 'error');
+      showStatus(e.message || "Reschedule failed!", 'error');
     }
   });
 
   const subBtn = document.getElementById("subscribeBtn");
   if (subBtn) subBtn.addEventListener("click", ensureSubscribed);
 
-  document.getElementById("filterAll").onclick = () => { currentFilter = 'all'; loadTodos(); };
-  document.getElementById("filterActive").onclick = () => { currentFilter = 'active'; loadTodos(); };
-  document.getElementById("filterDone").onclick = () => { currentFilter = 'done'; loadTodos(); };
+  const filterAllBtn = document.getElementById("filterAll");
+  const filterActiveBtn = document.getElementById("filterActive");
+  const filterDoneBtn = document.getElementById("filterDone");
+  function updateFilterUI() {
+    filterAllBtn.classList.remove('active');
+    filterActiveBtn.classList.remove('active');
+    filterDoneBtn.classList.remove('active');
+    if (currentFilter === 'all') filterAllBtn.classList.add('active');
+    if (currentFilter === 'active') filterActiveBtn.classList.add('active');
+    if (currentFilter === 'done') filterDoneBtn.classList.add('active');
+  }
+  filterAllBtn.onclick = () => { currentFilter = 'all'; updateFilterUI(); loadTodos(); };
+  filterActiveBtn.onclick = () => { currentFilter = 'active'; updateFilterUI(); loadTodos(); };
+  filterDoneBtn.onclick = () => { currentFilter = 'done'; updateFilterUI(); loadTodos(); };
+  updateFilterUI();
 
   loadTodos();
 });

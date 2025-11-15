@@ -71,7 +71,7 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    }
+    
     form label span { 
       font-weight: 600;
       color: #555;
@@ -153,7 +153,7 @@
       border-left-color: #ccc;
     }
     .actions { 
-      display: flex;
+
       gap: 8px;
       align-items: center;
     }
@@ -230,10 +230,23 @@
     }
     #resModal .modal-actions {
       display: flex;
-      gap: 12px;
+      gap: 16px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 8px;
     }
     #resModal .modal-actions button {
-      flex: 1;
+      flex: 1 1 0;
+      min-width: 120px;
+      padding: 12px 0;
+      font-size: 1em;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      box-shadow: 0 2px 8px rgba(52,152,219,0.08);
+      transition: background 0.2s, color 0.2s;
+      text-align: center;
+      cursor: pointer;
     }
       .filter-bar {
         display: flex;
@@ -255,6 +268,16 @@
         box-shadow: 0 2px 8px rgba(52,152,219,0.08);
         transition: background 0.2s, color 0.2s;
         text-align: center;
+        cursor: pointer;
+      }
+      .filter-bar button.active {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(52,152,219,0.18);
+      }
+      .filter-bar button:hover {
+        background: #e3f2fd;
+        color: #3498db;
       }
     @media (max-width: 640px) {
       .container { padding: 20px; }
@@ -269,9 +292,9 @@
     <h1>📝 Todo List</h1>
     <span id="statusMsg" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:8px;font-weight:600;"></span>
     <div class="filter-bar">
-      <button id="filterAll" class="btn-primary" type="button">Tất cả</button>
-      <button id="filterActive" type="button">Chưa hoàn thành</button>
-      <button id="filterDone" type="button">Đã hoàn thành</button>
+      <button id="filterAll" class="btn-primary" type="button">All</button>
+      <button id="filterActive" type="button">Active</button>
+      <button id="filterDone" type="button">Completed</button>
     </div>
     
 
@@ -290,12 +313,12 @@
         </select>
       </label>
       <label>
-        <span>⏰ Reminder time</span>
-        <input id="remindAt" type="datetime-local" required />
+        <span>⏰ Reminder Time</span>
+        <input id="remindAt" type="datetime-local" required placeholder="mm/dd/yyyy --:-- --" />
       </label>
       <label>
-        <span>📅 Due time</span>
-        <input id="dueAt" type="datetime-local" required />
+        <span>📅 Due Time</span>
+        <input id="dueAt" type="datetime-local" required placeholder="mm/dd/yyyy --:-- --" />
       </label>
       <div class="actions-bar">
         <button class="btn-primary" type="submit">Add Task</button>
@@ -313,11 +336,11 @@
       <h3>🔄 Reschedule Task</h3>
       <div class="modal-form">
         <label>
-          <span>⏰ Reminder time</span>
+          <span>⏰ Reminder Time</span>
           <input id="resRemindAt" type="datetime-local" />
         </label>
         <label>
-          <span>📅 Due time</span>
+          <span>📅 Due Time</span>
           <input id="resDueAt" type="datetime-local" />
         </label>
       </div>
