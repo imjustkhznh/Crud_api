@@ -1,21 +1,32 @@
 import 'dotenv/config';
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import userRoutes from "./routes/userRoutes.js";
+import pushRoutes from "./routes/pushRoutes.js";
+import todoRoutes from "./routes/todoRoutes.js";
 
 const app = express();
 app.use(express.json());
 
-// simple request logger to help debug "Cannot GET /users"
+// Serve static assets (e.g., sw.js, test-push.html) from project src directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(__dirname));
+
+app.use(express.static(path.join(__dirname)));
+
 app.use((req, res, next) => {
   // eslint-disable-next-line no-console
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
   next();
 });
 
-// mount router on /users so http://localhost:3000/users works
-app.use("/users", userRoutes);
 
-// health / debug route (do not expose password)
+app.use("/users", userRoutes);
+app.use("/push", pushRoutes);
+app.use("/todos", todoRoutes);
+
 app.get("/", (req, res) => {
   res.json({
     message: "Server is running",
@@ -30,12 +41,13 @@ app.get("/", (req, res) => {
 });
 
 // centralized error handler
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   // eslint-disable-next-line no-console
   console.error('Express error handler:', err && err.stack ? err.stack : err);
   res.status(err && err.status ? err.status : 500).json({
     error: err && err.message ? err.message : 'Internal Server Error'
   });
 });
+
 
 export default app;
