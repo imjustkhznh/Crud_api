@@ -55,10 +55,7 @@ PORT=3000
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_password
-DB_NAME=todo_db
-VAPID_SUBJECT=mailto:you@example.com
-VAPID_PUBLIC_KEY=your_public_key
-VAPID_PRIVATE_KEY=your_private_key
+
 ```
 
 5. Run: `npm run dev`
