@@ -110,7 +110,6 @@ export const updateUser = async (req, res) => {
       } 
     }
 
-
     // Update user
     const updatedUser = await User.updateUser(id, req.body);
 

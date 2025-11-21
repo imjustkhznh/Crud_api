@@ -3,10 +3,25 @@ import * as Todo from '../models/todoModel.js';
 export const createTodo = async (req, res) => {
   try {
     const { userId, content, dueAt, remindAt, tag } = req.body;
-    if (!content || !dueAt) return res.status(400).json({ error: 'content,dueAt required' });
+    // debug log incoming payload
+    // eslint-disable-next-line no-console
+    console.log('[createTodo] payload:', { userId, content, dueAt, remindAt, tag });
+    if (!content || !dueAt) {
+  return res.status(400).json({
+    success: false,
+    error: {
+      message: !content ? "Content is required" : "dueAt is required",
+      code: "VALIDATION_ERROR"
+    }
+  });
+}
     const todo = await Todo.createTodo({ userId, content, dueAt, remindAt, tag });
+    // eslint-disable-next-line no-console
+    console.log('[createTodo] created:', todo && todo.id ? { id: todo.id } : todo);
     res.status(201).json(todo);
   } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[createTodo] error:', e && e.stack ? e.stack : e);
     res.status(500).json({ error: e && e.message ? e.message : 'Failed to create todo' });
   }
 };

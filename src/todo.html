@@ -3,24 +3,209 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Todo List</title>
+  <title>Todoist</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
+    :root {
+      --primary-color: #db4c3f;
+      --primary-light: #f5e9e8;
+      --sidebar-bg: #f9f6f6;
+      --border-color: #e0e0e0;
+      --text-primary: #2d3436;
+      --text-secondary: #636e72;
+      --hover-bg: #f0f0f0;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --transition: all 0.2s ease-in-out;
+    }
+    
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: #828282;
+    }
+    
+    body { 
+      background: #f8f9fa;
+      color: var(--text-primary);
       min-height: 100vh;
-      padding: 20px;
-      color: #333;
+      display: flex;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      padding: 32px;
-    }
+    /* Sidebar */
+.sidebar {
+  width: 280px;
+  background: white;
+  border-right: 1px solid var(--border-color);
+  height: 100vh;
+  position: fixed;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.03);
+  z-index: 100;
+  transition: var(--transition);
+}
+
+.brand {
+  padding: 0 24px 16px;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-menu {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  margin: 2px 12px;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 500;
+  transition: var(--transition);
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.nav-item.active {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border-left-color: var(--primary-color);
+  font-weight: 600;
+}
+
+.nav-item i {
+  margin-right: 12px;
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 24px 0 4px 12px;
+  letter-spacing: 0.5px;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  padding: 32px 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  padding-left: 20px;
+  padding-top: 20px;
+  padding-right: 30px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.profile-dropdown:hover {
+  background: var(--hover-bg);
+}
+
+.profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.search-bar {
+  flex: 1;
+  max-width: 400px;
+  position: relative;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 14px;
+  background: #f1f1f1;
+}
+
+.search-bar i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon-button {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.icon-button:hover {
+  background: var(--hover-bg);
+}
+
     h1 { 
       text-align: center;
       font-size: 2em;
@@ -33,7 +218,7 @@
       flex-direction: column;
       gap: 16px;
       margin-bottom: 32px;
-      padding: 20px;
+      /* padding: 20px; */
       background: #f8f9fa;
       border-radius: 12px;
     }
@@ -288,45 +473,86 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📝 Todo List</h1>
-    <span id="statusMsg" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:8px;font-weight:600;"></span>
-    <div class="filter-bar">
-      <button id="filterAll" class="btn-primary" type="button">All</button>
-      <button id="filterActive" type="button">Active</button>
-      <button id="filterDone" type="button">Completed</button>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand" style="font-size: 30px;font-weight: 700;color: var(--primary-color);padding: 24px 20px 32px;border-bottom: 1px solid var(--border-color);">
+      TodoList
     </div>
     
+    <div class="nav-menu" style="padding-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+      <!-- Main Navigation -->
+      <a href="#" id="navAdd" class="nav-item" style="color: var(--primary-color); font-weight: 600; background: var(--primary-light); border-radius: 8px;">
+        <i class="material-icons">add</i>
+        Add task
+      </a>
 
-    <form id="todoForm">
-      <label>
-        <span>📋 Content</span>
-        <input id="content" placeholder="What do you need to do?" required />
-      </label>
-      <label>
-        <span>🏷️ Tag</span>
-        <select id="tag" required>
-          <option value="work">Work</option>
-          <option value="personal">Personal</option>
-          <option value="urgent">Urgent</option>
-          <option value="study">Study</option>
-        </select>
-      </label>
-      <label>
-        <span>⏰ Reminder Time</span>
-        <input id="remindAt" type="datetime-local" required placeholder="mm/dd/yyyy --:-- --" />
-      </label>
-      <label>
-        <span>📅 Due Time</span>
-        <input id="dueAt" type="datetime-local" required placeholder="mm/dd/yyyy --:-- --" />
-      </label>
-      <div class="actions-bar">
-        <button class="btn-primary" type="submit">Add Task</button>
-        <span id="subStatus"></span>
+      <a href="#" id="navAll" class="nav-item" style="border-radius: 8px;">
+        <i class="material-icons">format_list_bulleted</i>
+        All tasks
+      </a>
+
+      <a href="#" id="navUpcoming" class="nav-item" style="border-radius: 8px;">
+        <i class="material-icons">schedule</i>
+        Upcoming
+      </a>
+
+      <a href="#" id="navActive" class="nav-item" style="border-radius: 8px;">
+        <i class="material-icons">radio_button_unchecked</i>
+        Active
+      </a>
+
+      <a href="#" id="navCompleted" class="nav-item" style="border-radius: 8px;">
+        <i class="material-icons">check_circle_outline</i>
+        Completed
+      </a>
+
+      <!-- Filter section removed — sidebar navigation provides filtering -->
+    </div>
+  </aside>
+  
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <main class="main">
+      <div id="statusMsg" aria-live="polite" style="display:none;">
+        <!-- Notification content injected by JS -->
       </div>
-    </form>
 
-    <ul id="todoList"></ul>
+      <section class="center">
+        <div style="margin-bottom: 24px; text-align: center;">
+          <h2 style="font-size: 28px; font-weight: 700; color: #2d3436; margin: 0;">Task</h2>
+        </div>
+        <form id="todoForm">
+          <div class="task-card">
+            <textarea id="content" name="content" placeholder="Add task, like 'Research articles Saturday evening'" rows="2"></textarea>
+            <!-- keep remind/due inputs for backward compatibility with todo.js -->
+            <input id="remindAt" name="remindAt" type="datetime-local" style="display:none" />
+            <input id="dueAt" name="dueAt" type="datetime-local" style="display:none" />
+            <div class="card-controls">
+              <div class="pills">
+                <button type="button" class="pill" id="remindersPill">REMINDERS</button>
+              </div>
+              <div class="card-actions">
+                <select id="tag" name="tag" required>
+                  <option value="work">Work</option>
+                  <option value="personal">Personal</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="study">Study</option>
+                </select>
+                <div class="action-btns">
+                  <button type="button" id="cancel" class="btn-ghost">Cancel</button>
+                  <button type="submit" id="addTask" class="btn-primary">Add task</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <div class="tasks-list-wrap">
+          <ul id="todoList"></ul>
+        </div>
+      </section>
+    </main>
   </div>
 
   <script src="/todo.js"></script>
@@ -350,5 +576,296 @@
       </div>
     </div>
   </div>
+
+  <style>
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        position: fixed;
+        z-index: 1000;
+        transition: transform 0.3s ease;
+      }
+      
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      
+      .main-content {
+        margin-left: 0;
+      }
+      
+      .menu-toggle {
+        display: block;
+      }
+    }
+    .sidebar .brand { 
+      /* background: linear-gradient(135deg, #ff6b6b, #ff8e53); */
+      color: white;
+      /* width: 44px; */
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      /* margin-bottom: 16px; */
+    }
+    .nav ul { list-style:none; padding:0; margin: 0; }
+    .nav-item { padding:10px 8px; border-radius:8px; color:#333; margin-bottom:6px; cursor:pointer; }
+    .nav-item.active { background: linear-gradient(135deg,#fce8e6,#fdeef1); color:#ff6b6b; font-weight:700; }
+    .sidebar-footer { margin-top:auto;color:#888;padding-top:14px;font-size:0.95em }
+
+    .main { display:flex; flex-direction:column; gap:20px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; padding:12px 8px; }
+    .top-left h2 { margin:0; font-size:1.6em; }
+    .top-sub { color:#888; font-size:0.95em; }
+    .top-right { display:flex; gap:12px; align-items:center; }
+    .avatar { width:36px;height:36px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-weight:700 }
+
+    #todoForm {
+      margin-bottom: 24px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .center { 
+      padding: 0;
+      width: 100%;
+    }
+
+    .task-card { 
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e0e0e0;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+
+    .task-card:focus-within {
+      box-shadow: 0 4px 12px rgba(219, 76, 63, 0.12);
+      border-color: #db4c3f;
+    }
+
+    .task-card textarea { 
+      width: 100%; 
+      border: none; 
+      resize: none; 
+      font-size: 16px; 
+      font-family: inherit;
+      padding: 0;
+      margin-bottom: 16px;
+      color: #2d3436;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .task-card textarea::placeholder {
+      color: #a0aec0;
+      font-weight: 400;
+    }
+
+    .task-card textarea:focus { 
+      outline: none;
+    }
+
+    .card-controls { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      padding-top: 12px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .pills { 
+      display: flex; 
+      gap: 8px; 
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pill { 
+      padding: 6px 12px; 
+      border-radius: 6px; 
+      background: #f8f9fa; 
+      border: 1px solid #e0e0e0;
+      cursor: pointer; 
+      font-weight: 500;
+      font-size: 13px;
+      color: #636e72;
+      transition: all 0.2s ease;
+    }
+
+    .pill:hover {
+      background: #f0f0f0;
+      border-color: #d1d5db;
+    }
+
+    .pill.active { 
+      background: #f5e9e8;
+      color: #db4c3f;
+      border-color: #db4c3f;
+      font-weight: 600;
+    }
+
+    .pill.more { 
+      padding: 6px 8px;
+    }
+
+    .card-actions { 
+      display: flex; 
+      gap: 12px; 
+      align-items: center;
+    }
+
+    .card-actions select { 
+      padding: 8px 12px; 
+      border-radius: 6px; 
+      border: 1px solid #e0e0e0;
+      background: white;
+      font-size: 13px;
+      color: #2d3436;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .card-actions select:hover {
+      border-color: #d1d5db;
+    }
+
+    .card-actions select:focus {
+      outline: none;
+      border-color: #db4c3f;
+      box-shadow: 0 0 0 2px rgba(219, 76, 63, 0.1);
+    }
+
+    .action-btns { 
+      display: flex; 
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .btn-ghost { 
+      background: transparent;
+      border: 1px solid #e0e0e0;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #636e72;
+      font-weight: 500;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-ghost:hover {
+      background: #f8f9fa;
+      border-color: #d1d5db;
+      color: #2d3436;
+    }
+
+    .btn-primary { 
+      background: #db4c3f;
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .btn-primary:hover {
+      background: #c44136;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(219, 76, 63, 0.2);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .tasks-list-wrap { 
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    /* Professional notification */
+    #statusMsg {
+      display: block;
+      max-width: 900px;
+      margin: 8px 0 18px;
+      position: relative;
+      transition: transform 0.28s cubic-bezier(.2,.9,.2,1), opacity 0.28s ease;
+      opacity: 0;
+      transform: translateY(-6px);
+      z-index: 1200;
+    }
+    #statusMsg.visible { opacity: 1; transform: translateY(0); }
+    .notif {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(16,24,40,0.06);
+      font-weight: 600;
+      color: #0f1720;
+    }
+    .notif .icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex: 0 0 36px;
+    }
+    .notif .body { flex: 1; font-weight: 600; }
+    .notif .close {
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: rgba(0,0,0,0.6);
+      padding: 6px;
+      border-radius: 6px;
+    }
+    .notif.success { background: linear-gradient(90deg,#e6f7e9,#f3fff4); color:#065f46; }
+    .notif.success .icon { background: rgba(6,95,70,0.12); color: #059669; }
+    .notif.error { background: linear-gradient(90deg,#ffebe9,#fff5f5); color:#7f1d1d; }
+    .notif.error .icon { background: rgba(127,29,29,0.08); color:#dc2626; }
+    .notif.info { background: linear-gradient(90deg,#eef2ff,#f8fbff); color:#1e3a8a; }
+    .notif.info .icon { background: rgba(30,58,138,0.08); color:#2563eb; }
+    
+    #todoList { 
+      width: 100%;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    #todoList li { 
+      background: #fff;
+      margin-bottom: 10px;
+      padding: 12px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 6px 18px rgba(16,24,40,0.04);
+      width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .app-layout { grid-template-columns: 1fr; padding: 16px; margin: 16px; }
+      .sidebar { display:none }
+    }
+  </style>
 </body>
 </html>

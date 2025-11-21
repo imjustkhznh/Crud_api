@@ -46,11 +46,44 @@ function showEditModal(currentValue) {
 // Hiển thị thông báo trạng thái
 function showStatus(message, type = 'success') {
   const statusMsg = document.getElementById('statusMsg');
-  statusMsg.textContent = message;
+  if (!statusMsg) return;
+
+  // Ensure the status message container is visible
   statusMsg.style.display = 'block';
-  statusMsg.style.background = type === 'success' ? '#d4edda' : '#f8d7da';
-  statusMsg.style.color = type === 'success' ? '#155724' : '#721c24';
-  setTimeout(() => { statusMsg.style.display = 'none'; }, 2000);
+
+  // Build notification HTML
+  const kind = type === 'error' ? 'error' : (type === 'info' ? 'info' : 'success');
+  const icons = {
+    success: 'check_circle',
+    error: 'error',
+    info: 'info'
+  };
+  statusMsg.innerHTML = `
+    <div class="notif ${kind}">
+      <span class="icon material-icons">${icons[kind]}</span>
+      <div class="body">${message}</div>
+      <button class="close" aria-label="Dismiss">&times;</button>
+    </div>
+  `;
+
+  // Show with animation
+  statusMsg.classList.add('visible');
+
+  // Auto-hide after 3 seconds
+  clearTimeout(statusMsg._hideTimer);
+  statusMsg._hideTimer = setTimeout(() => {
+    statusMsg.classList.remove('visible');
+    statusMsg.style.display = 'none';
+  }, 3000);
+
+  // Close button
+  const closeBtn = statusMsg.querySelector('.close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      statusMsg.classList.remove('visible');
+      statusMsg.style.display = 'none';
+    });
+  }
 }
 const TODOS_API_BASE = "http://localhost:3000/todos";
 
@@ -89,8 +122,17 @@ async function loadTodos() {
     const todos = await fetchJson(TODOS_API_BASE);
     list.innerHTML = "";
     let filtered = todos || [];
+    const nowMs = Date.now();
     if (currentFilter === 'active') filtered = filtered.filter(t => !t.isDone);
     if (currentFilter === 'done') filtered = filtered.filter(t => t.isDone);
+    if (currentFilter === 'upcoming') {
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      filtered = filtered.filter(t => {
+        if (t.isDone) return false;
+        const due = new Date(t.dueAt).getTime();
+        return !Number.isNaN(due) && due >= nowMs && due <= (nowMs + sevenDays);
+      });
+    }
 
     // Phân trang
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -355,29 +397,155 @@ document.addEventListener("DOMContentLoaded", () => {
   const resDueAt = document.getElementById("resDueAt");
   const resSave = document.getElementById("resSave");
   const resCancel = document.getElementById("resCancel");
+  const remindAtInput = document.getElementById("remindAt");
+  const dueAtInput = document.getElementById("dueAt");
+  const remindersPill = document.getElementById("remindersPill");
+  const tagSelect = document.getElementById("tag");
+  const cancelBtn = document.getElementById("cancel");
+  
   let rescheduleTodoId = null;
+  let isReminderMode = false; // Track if we're in reminder setting mode
+  
+  // REMINDERS button - Show modal for setting reminder and due times
+  remindersPill.addEventListener("click", (e) => {
+    e.preventDefault();
+    isReminderMode = true;
+    remindersPill.classList.add("active");
+    
+    // Prefill with current values if they exist
+    resRemindAt.value = remindAtInput.value || "";
+    resDueAt.value = dueAtInput.value || "";
+    
+    // Change modal title and button text
+    resModal.querySelector("h3").textContent = "⏰ Set Reminder & Due Time";
+    resSave.textContent = "Set Times";
+    
+    resModal.style.display = "block";
+  });
+  
+  // Save reminder times
+  resSave.addEventListener("click", async () => {
+    if (!isReminderMode) {
+      // Original reschedule logic
+      if (!rescheduleTodoId) return;
+      try {
+        const body = {};
+        if (resRemindAt.value) body.remindAt = resRemindAt.value.replace("T", " ");
+        if (resDueAt.value) body.dueAt = resDueAt.value.replace("T", " ");
+        if (!body.remindAt && !body.dueAt) {
+          showStatus("Please select at least one time.", 'error');
+          return;
+        }
+        const now = new Date();
+        if (body.remindAt && new Date(body.remindAt) < now) {
+          showStatus('Reminder time cannot be in the past!', 'error');
+          return;
+        }
+        if (body.dueAt && new Date(body.dueAt) < now) {
+          showStatus('Due time cannot be in the past!', 'error');
+          return;
+        }
+        await fetchJson(`${TODOS_API_BASE}/${rescheduleTodoId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        rescheduleTodoId = null;
+        resModal.style.display = "none";
+        await loadTodos();
+        showStatus('Rescheduled successfully!', 'success');
+      } catch (e) {
+        showStatus(e.message || "Reschedule failed!", 'error');
+      }
+    } else {
+      // New reminder setting logic
+      const now = new Date();
+      
+      if (resRemindAt.value && new Date(resRemindAt.value) < now) {
+        showStatus('Reminder time cannot be in the past!', 'error');
+        return;
+      }
+      if (resDueAt.value && new Date(resDueAt.value) < now) {
+        showStatus('Due time cannot be in the past!', 'error');
+        return;
+      }
+      
+      // Set the values in the hidden inputs
+      if (resRemindAt.value) remindAtInput.value = resRemindAt.value;
+      if (resDueAt.value) dueAtInput.value = resDueAt.value;
+      
+      isReminderMode = false;
+      resModal.style.display = "none";
+      showStatus('Reminder times set successfully!', 'success');
+    }
+  });
+  
+  // Cancel button for reminders
+  resCancel.addEventListener("click", () => {
+    if (isReminderMode) {
+      isReminderMode = false;
+      remindersPill.classList.remove("active");
+    } else {
+      rescheduleTodoId = null;
+    }
+    resModal.style.display = "none";
+  });
+  
+  // Cancel form button
+  cancelBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    form.reset();
+    remindAtInput.value = "";
+    dueAtInput.value = "";
+    remindersPill.classList.remove("active");
+    tagSelect.value = "work";
+    showStatus("Form cleared", "success");
+  });
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const content = document.getElementById("content").value;
-    const remindAt = document.getElementById("remindAt").value.replace("T", " ");
-    const dueAt = document.getElementById("dueAt").value.replace("T", " ");
+    let remindAt = document.getElementById("remindAt").value;
+    let dueAt = document.getElementById("dueAt").value;
     const tag = document.getElementById("tag").value;
     const now = new Date();
-    if (remindAt && new Date(remindAt) < now) {
+    
+    // If content is empty, show error
+    if (!content || content.trim() === "") {
+      showStatus('Task content cannot be empty!', 'error');
+      return;
+    }
+
+    // Set default dueAt to tomorrow if not provided
+    if (!dueAt) {
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      dueAt = tomorrow.toISOString().slice(0, 16).replace("T", " ");
+    } else {
+      dueAt = dueAt.replace("T", " ");
+    }
+
+    // Set default remindAt to now if not provided
+    if (!remindAt) {
+      remindAt = now.toISOString().slice(0, 16).replace("T", " ");
+    } else {
+      remindAt = remindAt.replace("T", " ");
+    }
+
+    if (new Date(remindAt) < now) {
       showStatus('Reminder time cannot be in the past!', 'error');
       return;
     }
-    if (dueAt && new Date(dueAt) < now) {
+    if (new Date(dueAt) < now) {
       showStatus('Due time cannot be in the past!', 'error');
       return;
     }
     try {
-      // Ensure subscription automatically when adding a task
+      // Ensure automatic notification subscription when adding a task
       try {
         const hasSub = await isSubscribed();
         if (!hasSub) {
           await ensureSubscribed();
-          console.log('Auto-subscribed during task creation');
+          console.log('Automatically subscribed to notifications when creating a task');
         }
       } catch (_) {}
 
@@ -388,7 +556,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       form.reset();
       await loadTodos();
-      showStatus('Task added successfully!', 'success');
+      showStatus('Thêm công việc thành công!', 'success');
     } catch (e) {
       showStatus(e.message || "Failed to add task!", 'error');
     }
@@ -487,21 +655,40 @@ document.addEventListener("DOMContentLoaded", () => {
   const subBtn = document.getElementById("subscribeBtn");
   if (subBtn) subBtn.addEventListener("click", ensureSubscribed);
 
-  const filterAllBtn = document.getElementById("filterAll");
-  const filterActiveBtn = document.getElementById("filterActive");
-  const filterDoneBtn = document.getElementById("filterDone");
+  // Sidebar nav elements
+  const navAdd = document.getElementById('navAdd');
+  const navAll = document.getElementById('navAll');
+  const navUpcoming = document.getElementById('navUpcoming');
+  const navActive = document.getElementById('navActive');
+  const navCompleted = document.getElementById('navCompleted');
   function updateFilterUI() {
-    filterAllBtn.classList.remove('active');
-    filterActiveBtn.classList.remove('active');
-    filterDoneBtn.classList.remove('active');
-    if (currentFilter === 'all') filterAllBtn.classList.add('active');
-    if (currentFilter === 'active') filterActiveBtn.classList.add('active');
-    if (currentFilter === 'done') filterDoneBtn.classList.add('active');
+    // clear active state on sidebar navs
+    if (navAll) navAll.classList.remove('active');
+    if (navActive) navActive.classList.remove('active');
+    if (navCompleted) navCompleted.classList.remove('active');
+    if (navUpcoming) navUpcoming.classList.remove('active');
+    if (currentFilter === 'all' && navAll) navAll.classList.add('active');
+    if (currentFilter === 'active' && navActive) navActive.classList.add('active');
+    if (currentFilter === 'done' && navCompleted) navCompleted.classList.add('active');
+    if (currentFilter === 'upcoming' && navUpcoming) navUpcoming.classList.add('active');
   }
-  filterAllBtn.onclick = () => { currentFilter = 'all'; updateFilterUI(); loadTodos(); };
-  filterActiveBtn.onclick = () => { currentFilter = 'active'; updateFilterUI(); loadTodos(); };
-  filterDoneBtn.onclick = () => { currentFilter = 'done'; updateFilterUI(); loadTodos(); };
   updateFilterUI();
+
+  // Wire sidebar nav to filters and actions
+  if (navAdd) {
+    navAdd.addEventListener('click', (e) => {
+      e.preventDefault();
+      // focus the content textarea for quick adding
+      const content = document.getElementById('content');
+      if (content) {
+        content.focus();
+      }
+    });
+  }
+  if (navAll) navAll.addEventListener('click', (e) => { e.preventDefault(); currentFilter = 'all'; updateFilterUI(); loadTodos(); });
+  if (navActive) navActive.addEventListener('click', (e) => { e.preventDefault(); currentFilter = 'active'; updateFilterUI(); loadTodos(); });
+  if (navCompleted) navCompleted.addEventListener('click', (e) => { e.preventDefault(); currentFilter = 'done'; updateFilterUI(); loadTodos(); });
+  if (navUpcoming) navUpcoming.addEventListener('click', (e) => { e.preventDefault(); currentFilter = 'upcoming'; updateFilterUI(); loadTodos(); });
 
   loadTodos();
 });

@@ -1,7 +1,7 @@
 import { getAllSubscriptions } from '../models/subscriptionModel.js';
 import { sendWebPush } from '../config/push.js';
 
-// Gửi 1 payload tới tất cả subscriptions
+
 export const sendPushNotification = async (payload) => {
   const subs = await getAllSubscriptions();
   if (!subs.length) return { sent: 0 };
@@ -17,3 +17,6 @@ export const sendPushNotification = async (payload) => {
   }
   return { sent: ok };
 };
+
+
+

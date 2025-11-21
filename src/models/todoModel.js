@@ -21,6 +21,9 @@ export const createTodo = async ({ userId = null, content, dueAt, remindAt = nul
     `INSERT INTO todos (user_id, content, due_at, remind_at, tag) VALUES (?, ?, ?, ?, ?)`,
     [userId, content, dueAt, remindAt, tag]
   );
+  // debug: log insert result
+  // eslint-disable-next-line no-console
+  console.log('[todoModel.createTodo] insert result:', res && typeof res === 'object' ? { insertId: res.insertId, affectedRows: res.affectedRows } : res);
   const [rows] = await pool.query(`SELECT * FROM todos WHERE id=?`, [res.insertId]);
   return mapRow(rows[0]);
 };
