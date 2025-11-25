@@ -9,7 +9,6 @@ import todoRoutes from "./routes/todoRoutes.js";
 const app = express();
 app.use(express.json());
 
-// Serve static assets (e.g., sw.js, test-push.html) from project src directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(__dirname));

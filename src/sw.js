@@ -25,13 +25,13 @@ self.addEventListener('notificationclick', event => {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      // Nếu tab đã mở, focus nó
+      
       for (const client of windowClients) {
         if (client.url === targetUrl && 'focus' in client) {
           return client.focus();
         }
       }
-      // Nếu chưa có tab đó → mở mới
+      
       if (clients.openWindow) {
         return clients.openWindow(targetUrl);
       }
